@@ -4,6 +4,9 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 // ini_set('max_execution_time', '300'); // 300 soniya
 // ini_set('memory_limit', '256M'); // 256 MB
+ini_set('log_errors', 1);
+ini_set('error_log', 'error_log.txt');
+
 
 
 #================================================
@@ -45,6 +48,11 @@ function bot($method, $datas = [])
 
 
 
+//Step directoryini yarating
+if (!is_dir('step')) {
+    mkdir('step', 0777, true);
+    file_put_contents("log.txt", "Step directory created\n", FILE_APPEND);
+}
 
 
 
@@ -190,21 +198,18 @@ $sana = date("d.m.Y");
 
 #================================================
 
-$update = json_decode(file_get_contents('php://input'));
+// Update'ni olish
+$update = json_decode(file_get_contents('php://input'), true);
 
-$message = $update->message;
-$callback = $update->callback_query;
+// Xabar va callback query detallari
+$message = isset($update['message']) ? $update['message'] : null;
+$callback = isset($update['callback_query']) ? $update['callback_query'] : null;
 
 if (isset($message)) {
 	$cid = $message->chat->id;
 	$Tc = $message->chat->type;
 
-	$cid = $cid ?? 0;
-$text = $text ?? '';
-$data = $data ?? '';
-
-
-	// $text = $message->text;
+	$text = $message->text;
 	$mid = $message->message_id;
 
 	$from_id = $message->from->id;
@@ -242,21 +247,6 @@ if (isset($callback)) {
 	$last = $callback->from->last_name;
 }
 
-
-$cid = $cid ?? 0;
-$text = $text ?? '';
-$data = $data ?? '';
-
-if (isset($update->message)) {
-    $message = $update->message;
-    $text = $message->text ?? '';
-} elseif (isset($update->callback_query)) {
-    $callbackQuery = $update->callback_query;
-    $data = $callbackQuery->data ?? '';
-} else {
-    // So'rov noto'g'ri yoki qo'llab-quvvatlanmaydi
-    exit;
-}
 #=================================================
 
 mkdir("admin");
@@ -317,7 +307,6 @@ mysqli_query($connect, "CREATE TABLE users(
 )");
 
 
-
 if ($Tc == "private") {
 	$result = mysqli_query($connect, "SELECT * FROM `users` WHERE `id` = $cid");
 	$rew = mysqli_fetch_assoc($result);
@@ -335,14 +324,6 @@ if ($message) {
 	} else {
 		mysqli_query($connect, "INSERT INTO `settings`(`kino`,`kino2`) VALUES ('0','0')");
 	}
-}
-
-
-$filePath = 'admin/kino.txt';
-if (file_exists($filePath)) {
-    $content = file_get_contents($filePath);
-} else {
-    $content = ''; // Fayl yo'q bo'lsa, bo'sh qiymat beriladi
 }
 
 #=================================================
@@ -401,11 +382,9 @@ $botdel = $update->my_chat_member->new_chat_member;
 $botdelid = $update->my_chat_member->from->id;
 $userstatus = $botdel->status;
 
-if (isset($update->result)) {
-    $result = $update->result;
-} else {
-    $result = null; // Xato uchun default qiymat
-}  
+//////////////////////////////////
+
+
 
 if ($botdel) {
 	if ($userstatus == "kicked") {
@@ -839,15 +818,36 @@ $reklama", $keyBot);
 			exit();
 		}
 	}
+}else {
+sendMessage($cid, "<b>☹︎ Sizni tushuna olib bo'lmadi!\n\nBotni yangilang: /start</b>");
 }
 
+file_put_contents("log.txt", "Step: " . file_get_contents("step/$cid.txt") . "\n", FILE_APPEND);
+file_put_contents("log.txt", "Video ID: " . $video_id . "\n", FILE_APPEND);
 
+file_put_contents("log.txt", "Video object: " . print_r($video, true) . "\n", FILE_APPEND);
 
+if (file_exists("step/$cid.txt")) {
+	file_put_contents("log.txt", "Step file exists: " . file_get_contents("step/$cid.txt") . "\n", FILE_APPEND);
+} else {
+	file_put_contents("log.txt", "Step file does not exist\n", FILE_APPEND);
+}
 
+file_put_contents("log.txt", "CID: $cid, Admin: $shahzoddev\n", FILE_APPEND);
 
-/*else {
-sendMessage($cid, "<b>☹︎ Sizni tushuna olib bo'lmadi!\n\nBotni yangilang: /start</b>");
-}*/
+$result = file_put_contents("step/$cid.txt", "upload_movie");
+if ($result === false) {
+	file_put_contents("log.txt", "Failed to write step file for CID: $cid\n", FILE_APPEND);
+} else {
+	file_put_contents("log.txt", "Step file created for CID: $cid\n", FILE_APPEND);
+}
+
+if (!is_dir('step')) {
+	mkdir('step', 0777, true);
+	file_put_contents("log.txt", "Step directory created\n", FILE_APPEND);
+}
+
+  file_put_contents("log.txt", "Video response: " . print_r($video, true) . "\n", FILE_APPEND);
 
 
 ?>
