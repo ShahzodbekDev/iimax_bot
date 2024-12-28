@@ -199,7 +199,12 @@ if (isset($message)) {
 	$cid = $message->chat->id;
 	$Tc = $message->chat->type;
 
-	$text = $message->text;
+	$cid = $cid ?? 0;
+$text = $text ?? '';
+$data = $data ?? '';
+
+
+	// $text = $message->text;
 	$mid = $message->message_id;
 
 	$from_id = $message->from->id;
@@ -237,6 +242,21 @@ if (isset($callback)) {
 	$last = $callback->from->last_name;
 }
 
+
+$cid = $cid ?? 0;
+$text = $text ?? '';
+$data = $data ?? '';
+
+if (isset($update->message)) {
+    $message = $update->message;
+    $text = $message->text ?? '';
+} elseif (isset($update->callback_query)) {
+    $callbackQuery = $update->callback_query;
+    $data = $callbackQuery->data ?? '';
+} else {
+    // So'rov noto'g'ri yoki qo'llab-quvvatlanmaydi
+    exit;
+}
 #=================================================
 
 mkdir("admin");
@@ -297,6 +317,7 @@ mysqli_query($connect, "CREATE TABLE users(
 )");
 
 
+
 if ($Tc == "private") {
 	$result = mysqli_query($connect, "SELECT * FROM `users` WHERE `id` = $cid");
 	$rew = mysqli_fetch_assoc($result);
@@ -314,6 +335,14 @@ if ($message) {
 	} else {
 		mysqli_query($connect, "INSERT INTO `settings`(`kino`,`kino2`) VALUES ('0','0')");
 	}
+}
+
+
+$filePath = 'admin/kino.txt';
+if (file_exists($filePath)) {
+    $content = file_get_contents($filePath);
+} else {
+    $content = ''; // Fayl yo'q bo'lsa, bo'sh qiymat beriladi
 }
 
 #=================================================
@@ -371,6 +400,12 @@ if ($text == "/start" and joinchat($cid) == true) {
 $botdel = $update->my_chat_member->new_chat_member;
 $botdelid = $update->my_chat_member->from->id;
 $userstatus = $botdel->status;
+
+if (isset($update->result)) {
+    $result = $update->result;
+} else {
+    $result = null; // Xato uchun default qiymat
+}  
 
 if ($botdel) {
 	if ($userstatus == "kicked") {
@@ -804,7 +839,13 @@ $reklama", $keyBot);
 			exit();
 		}
 	}
-}/*else {
+}
+
+
+
+
+
+/*else {
 sendMessage($cid, "<b>☹︎ Sizni tushuna olib bo'lmadi!\n\nBotni yangilang: /start</b>");
 }*/
 
